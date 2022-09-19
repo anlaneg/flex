@@ -40,11 +40,13 @@ void
 sf_push (void)
 {
     if (_sf_top_ix + 1 >= _sf_max) {
+        /*_sf_stk空间不足，增长其空间*/
         _sf_max += 32;
         _sf_stk = realloc(_sf_stk, sizeof(scanflags_t) * _sf_max);
     }
 
     // copy the top element
+    /*复制栈顶元素到_sf_stk,增加栈指针*/
     _sf_stk[_sf_top_ix + 1] = _sf_stk[_sf_top_ix];
     ++_sf_top_ix;
 }
@@ -52,6 +54,7 @@ sf_push (void)
 void
 sf_pop (void)
 {
+    /*弹栈*/
     assert(_sf_top_ix > 0);
     --_sf_top_ix;
 }
@@ -60,6 +63,7 @@ sf_pop (void)
 void
 sf_init (void)
 {
+    /*初始化stack,栈顶指针为0*/
     assert(_sf_stk == NULL);
     _sf_max = 32;
     _sf_stk = malloc(sizeof(scanflags_t) * _sf_max);

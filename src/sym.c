@@ -40,8 +40,11 @@
  */
 
 struct hash_entry {
+    /*用于双向串连*/
 	struct hash_entry *prev, *next;
+	/*符号名称*/
 	char   *name;
+	/*符号取值*/
 	char   *str_val;
 	int     int_val;
 };
@@ -72,11 +75,14 @@ static int hashfunct(const char *, int);
 
 static int addsym (char sym[], char *str_def, int int_def, hash_table table, int table_size)
 {
+    /*针对符号，计算hash桶*/
 	int    hash_val = hashfunct (sym, table_size);
+	/*取得HASH桶指针*/
 	struct hash_entry *sym_entry = table[hash_val];
 	struct hash_entry *new_entry;
 	struct hash_entry *successor;
 
+	/*遍历hash桶，如果其上已有此符号，则返回-1*/
 	while (sym_entry) {
 		if (!strcmp (sym, sym_entry->name)) {	/* entry already exists */
 			return -1;
@@ -91,6 +97,7 @@ static int addsym (char sym[], char *str_def, int int_def, hash_table table, int
 	if (new_entry == NULL)
 		flexfatal (_("symbol table memory allocation failed"));
 
+	/*将此节点串到桶头上（先串一半）*/
 	if ((successor = table[hash_val]) != 0) {
 		new_entry->next = successor;
 		successor->prev = new_entry;
@@ -103,6 +110,7 @@ static int addsym (char sym[], char *str_def, int int_def, hash_table table, int
 	new_entry->str_val = str_def;
 	new_entry->int_val = int_def;
 
+	/*串到桶头（完成串另一半）*/
 	table[hash_val] = new_entry;
 
 	return 0;
@@ -117,8 +125,9 @@ void    cclinstal (char ccltxt[], int cclnum)
 	 * called unless the symbol is new.
 	 */
 
-	(void) addsym (xstrdup(ccltxt),
-		       (char *) 0, cclnum, ccltab, CCL_HASH_SIZE);
+    /*在ccltab表中添加符号ccltxt,其对应的整数值为cclnum*/
+	(void) addsym (xstrdup(ccltxt)/*符号*/,
+		       (char *) 0, cclnum/*符号取值*/, ccltab/*符号表*/, CCL_HASH_SIZE/*符号表大小*/);
 }
 
 
@@ -129,6 +138,7 @@ void    cclinstal (char ccltxt[], int cclnum)
 
 int     ccllookup (char ccltxt[])
 {
+    /*在ccltab表中查找ccltxt,找到后返回其对应的int_val*/
 	return findsym (ccltxt, ccltab, CCL_HASH_SIZE)->int_val;
 }
 
@@ -137,13 +147,17 @@ int     ccllookup (char ccltxt[])
 
 static struct hash_entry *findsym (const char *sym, hash_table table, int table_size)
 {
+    /*定义空*/
 	static struct hash_entry empty_entry = {
 		NULL, NULL, NULL, NULL, 0,
 	};
+
+	/*取符号表对应的hash桶*/
 	struct hash_entry *sym_entry =
 
 		table[hashfunct (sym, table_size)];
 
+	/*在桶上进行遍历，如果查找到，返回hash_entry本身，如果查找失败，则返回empty*/
 	while (sym_entry) {
 		if (!strcmp (sym, sym_entry->name))
 			return sym_entry;
@@ -163,6 +177,7 @@ static int hashfunct (const char *str, int hash_size)
 	hashval = 0;
 	locstr = 0;
 
+	/*字符串hash函数,每个字符均运算*/
 	while (str[locstr]) {
 		hashval = (hashval << 1) + (unsigned char) str[locstr++];
 		hashval %= hash_size;
@@ -177,6 +192,7 @@ static int hashfunct (const char *str, int hash_size)
 void    ndinstal (const char *name, char definition[])
 {
 
+    /*向ndtbl中添加一个符号name,其对应的字符串值为definition*/
 	if (addsym (xstrdup(name),
 		    xstrdup(definition), 0,
 		    ndtbl, NAME_TABLE_HASH_SIZE))
@@ -191,6 +207,7 @@ void    ndinstal (const char *name, char definition[])
 
 char   *ndlookup (const char *nd)
 {
+    /*自ndtbl中查询符号nd对应的字符串值*/
 	return findsym (nd, ndtbl, NAME_TABLE_HASH_SIZE)->str_val;
 }
 
@@ -199,10 +216,12 @@ char   *ndlookup (const char *nd)
 
 void    scextend (void)
 {
+    /*增大当前最大长度*/
 	current_max_scs += MAX_SCS_INCREMENT;
 
 	++num_reallocs;
 
+	/*增大scset,scbol,scxclu...数组长度*/
 	scset = reallocate_integer_array (scset, current_max_scs);
 	scbol = reallocate_integer_array (scbol, current_max_scs);
 	scxclu = reallocate_integer_array (scxclu, current_max_scs);
@@ -219,12 +238,14 @@ void    scextend (void)
 
 void    scinstal (const char *str, int xcluflg)
 {
-
 	if (++lastsc >= current_max_scs)
+	    /*数组扩充*/
 		scextend ();
 
+	/*scname记录符号名称*/
 	scname[lastsc] = xstrdup(str);
 
+	/*在sctbl中实现str与其在scname中索引的关联*/
 	if (addsym(scname[lastsc], NULL, lastsc,
 		    sctbl, START_COND_HASH_SIZE))
 			format_pinpoint_message (_
@@ -245,5 +266,6 @@ str);
 
 int     sclookup (const char *str)
 {
+    /*在sctbl中查找符号str,获得其在scname中的索引*/
 	return findsym (str, sctbl, START_COND_HASH_SIZE)->int_val;
 }

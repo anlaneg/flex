@@ -285,12 +285,18 @@ int yytbl_write32 (struct yytbl_writer *wr, flex_uint32_t v)
 	flex_uint32_t vnet;
 	int  bytes, rv;
 
+	/*转网络序*/
 	vnet = htonl (v);
+	/*写入到wr->out文件中*/
 	bytes = (int) sizeof (flex_uint32_t);
 	rv = (int) fwrite (&vnet, (size_t) bytes, 1, wr->out);
 	if (rv != 1)
 		return -1;
+
+	/*增加写入的字节数*/
 	wr->total_written += bytes;
+
+	/*返回写入的字节数*/
 	return bytes;
 }
 

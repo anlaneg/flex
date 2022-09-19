@@ -1079,20 +1079,24 @@ void set_input_file( char *file )
 	{
 	if ( file && strcmp( file, "-" ) )
 		{
+		/*指定的输入文件不为‘-’，设置infilename,按路径打开指定文件*/
 		infilename = xstrdup(file);
 		yyin = fopen( infilename, "r" );
 
 		if ( yyin == NULL )
+		      /*打开文件失败，报错*/
 			lerr( _( "can't open %s" ), file );
 		}
 
 	else
 		{
+		/*指定的文件为stdin*/
 		yyin = stdin;
+		/*设置当前infile文件名称*/
 		infilename = xstrdup("<stdin>");
 		}
 
-	linenum = 1;
+	linenum = 1;/*行号从1开始编号*/
 	}
 
 void context_call(char *txt) {

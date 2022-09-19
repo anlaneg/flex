@@ -886,7 +886,9 @@ void gentabs (void)
 
 void visible_define (const char *symname)
 {
+    /*定义宏函数symname,其内容为空*/
 	out_m4_define(symname, NULL);
+	/*添加注释行，为此宏名称*/
 	comment(symname);
 	outc ('\n');
 }

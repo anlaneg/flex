@@ -51,14 +51,17 @@ struct _aux {
 
 struct _scanopt_t {
 	const optspec_t *options;	/* List of options. */
+	/*每个选项对应一个_aux结构*/
 	struct _aux *aux;	/* Auxiliary data about options. */
+	/*指明参数options的数目*/
 	int     optc;		/* Number of options. */
 	int     argc;		/* Number of args. */
 	char  **argv;		/* Array of strings. */
+	/*当前分析位置*/
 	int     index;		/* Used as: argv[index][subscript]. */
 	int     subscript;
 	char    no_err_msg;	/* If true, do not print errors. */
-	char    has_long;
+	char    has_long;/*是否有长选项*/
 	char    has_short;
 };
 
@@ -140,10 +143,10 @@ scanopt_t *scanopt_init (const optspec_t *options, int argc, char **argv, int fl
 	struct _scanopt_t *s;
 	s = malloc(sizeof (struct _scanopt_t));
 
-	s->options = options;
+	s->options = options;/*指定选项*/
 	s->optc = 0;
-	s->argc = argc;
-	s->argv = (char **) argv;
+	s->argc = argc;/*参数数目*/
+	s->argv = (char **) argv;/*参数*/
 	s->index = 1;
 	s->subscript = 0;
 	s->no_err_msg = (flags & SCANOPT_NO_ERR_MSG);
@@ -164,20 +167,24 @@ scanopt_t *scanopt_init (const optspec_t *options, int argc, char **argv, int fl
 		const struct optspec_t *opt;
 		struct _aux *aux;
 
-		opt = s->options + i;
-		aux = s->aux + i;
+		opt = s->options + i;/*取i号选项*/
+		aux = s->aux + i;/*取i号选项对应的aux*/
 
 		aux->flags = ARG_NONE;
 
 		if (opt->opt_fmt[0] == '-' && opt->opt_fmt[1] == '-') {
+		    /*此选项为长选项，打LONG标记*/
 			aux->flags |= IS_LONG;
+			/*获得pname(跳过'--')*/
 			pname = (const unsigned char *)(opt->opt_fmt + 2);
 			s->has_long = 1;
 		}
 		else {
+		    /*此选项为短选项，跳过'-'*/
 			pname = (const unsigned char *)(opt->opt_fmt + 1);
 			s->has_short = 1;
 		}
+		/*此选项长可打印长度*/
 		aux->printlen = (int) strlen (opt->opt_fmt);
 
 		aux->namelen = 0;
@@ -187,7 +194,7 @@ scanopt_t *scanopt_init (const optspec_t *options, int argc, char **argv, int fl
 			    || !(aux->flags & IS_LONG)) {
 				if (aux->namelen == 0)
 					aux->namelen = (int) (p - pname);
-				aux->flags |= ARG_REQ;
+				aux->flags |= ARG_REQ;/*必选参数*/
 				aux->flags &= ~ARG_NONE;
 			}
 			/* detect optional arg. This overrides required arg. */
@@ -195,12 +202,12 @@ scanopt_t *scanopt_init (const optspec_t *options, int argc, char **argv, int fl
 				if (aux->namelen == 0)
 					aux->namelen = (int) (p - pname);
 				aux->flags &= ~(ARG_REQ | ARG_NONE);
-				aux->flags |= ARG_OPT;
+				aux->flags |= ARG_OPT;/*可选参数*/
 				break;
 			}
 		}
 		if (aux->namelen == 0)
-			aux->namelen = (int) (p - pname);
+			aux->namelen = (int) (p - pname);/*无参数*/
 	}
 	return (scanopt_t *) s;
 }
@@ -511,7 +518,7 @@ static void scanopt_err(struct _scanopt_t *s, int is_short, int err)
  * optname will point to str + 2
  *
  */
-static int matchlongopt (char *str, char **optname, int *optlen, char **arg, int *arglen)
+static int matchlongopt (char *str/*待分析的长选项*/, char **optname/*出参，选项名称*/, int *optlen/*出参，选项名称长度*/, char **arg/*出参，选项参数*/, int *arglen/*出参，选项参数长度*/)
 {
 	char   *p;
 
@@ -521,28 +528,32 @@ static int matchlongopt (char *str, char **optname, int *optlen, char **arg, int
 	/* Match regex /--./   */
 	p = str;
 	if (p[0] != '-' || p[1] != '-' || !p[2])
+	    /*遇到本函数不处理的情况，返回0*/
 		return 0;
 
+	/*跳过'--'*/
 	p += 2;
-	*optname = p;
+	*optname = p;/*指定选项名*/
 
 	/* find the end of optname */
 	while (*p && *p != '=')
 		++p;
 
+	/*确定选项名称长度*/
 	*optlen = (int) (p - *optname);
 
+	/*此选项没有'='号部分*/
 	if (!*p)
 		/* an option with no '=...' part. */
 		return 1;
 
 
 	/* We saw an '=' char. The rest of p is the arg. */
-	p++;
-	*arg = p;
+	p++;/*跳过'='符*/
+	*arg = p;/*标记选项参数*/
 	while (*p)
 		++p;
-	*arglen = (int) (p - *arg);
+	*arglen = (int) (p - *arg);/*指明选项参数长度*/
 
 	return 1;
 }
@@ -554,7 +565,7 @@ static int matchlongopt (char *str, char **optname, int *optlen, char **arg, int
  * Return boolean true if found and no error.
  * Error stored in err_code or zero if no error. */
 static int find_opt (struct _scanopt_t *s, int lookup_long, char *optstart, int
-	len, int *err_code, int *opt_offset)
+	len/*待查找选项长度*/, int *err_code, int *opt_offset/*出参，匹配的选项索引*/)
 {
 	int     nmatch = 0, lastr_val = 0, i;
 
@@ -562,23 +573,28 @@ static int find_opt (struct _scanopt_t *s, int lookup_long, char *optstart, int
 	*opt_offset = -1;
 
 	if (!optstart)
+	    /*指定为空，直接返回*/
 		return 0;
 
 	for (i = 0; i < s->optc; i++) {
 		const char   *optname;
 
+		/*指向选项名称*/
 		optname = s->options[i].opt_fmt + (lookup_long ? 2 : 1);
 
 		if (lookup_long && (s->aux[i].flags & IS_LONG)) {
 			if (len > s->aux[i].namelen)
+			    /*待查找的长度与此选项不符，忽略*/
 				continue;
 
 			if (strncmp (optname, optstart, (size_t) len) == 0) {
+			    /*与当前选项匹配*/
 				nmatch++;
 				*opt_offset = i;
 
 				/* exact match overrides all. */
 				if (len == s->aux[i].namelen) {
+				    /*严格匹配，跳出*/
 					nmatch = 1;
 					break;
 				}
@@ -592,6 +608,7 @@ static int find_opt (struct _scanopt_t *s, int lookup_long, char *optstart, int
 		}
 		else if (!lookup_long && !(s->aux[i].flags & IS_LONG)) {
 			if (optname[0] == optstart[0]) {
+			    /*短名称匹配*/
 				nmatch++;
 				*opt_offset = i;
 			}
@@ -599,18 +616,21 @@ static int find_opt (struct _scanopt_t *s, int lookup_long, char *optstart, int
 	}
 
 	if (nmatch == 0) {
+	    /*匹配失败，置error code*/
 		*err_code = SCANOPT_ERR_OPT_UNRECOGNIZED;
 		*opt_offset = -1;
 	}
 	else if (nmatch > 1) {
+	    /*匹配失败，有多个匹配情况*/
 		*err_code = SCANOPT_ERR_OPT_AMBIGUOUS;
 		*opt_offset = -1;
 	}
 
-	return *err_code ? 0 : 1;
+	return *err_code ? 0 : 1;/*匹配成功返回1*/
 }
 
 
+/*实现参数解析*/
 int     scanopt (scanopt_t *svoid, char **arg, int *optindex)
 {
 	char   *optname = NULL, *optarg = NULL, *pstart;
@@ -629,17 +649,20 @@ int     scanopt (scanopt_t *svoid, char **arg, int *optindex)
 	SAFE_ASSIGN (optindex, s->index);
 
 	if (s->index >= s->argc)
+	    /*当前分析位置已超过参数上限，退出*/
 		return 0;
 
 	/* pstart always points to the start of our current scan. */
 	pstart = s->argv[s->index] + s->subscript;
 	if (!pstart)
+	    /*此位置参数为空，退出*/
 		return 0;
 
 	if (s->subscript == 0) {
 
 		/* test for exact match of "--" */
 		if (pstart[0] == '-' && pstart[1] == '-' && !pstart[2]) {
+		    /*遇到'--' 参数*/
 			SAFE_ASSIGN (optindex, s->index + 1);
 			INC_INDEX (s, 1);
 			return 0;
@@ -647,12 +670,13 @@ int     scanopt (scanopt_t *svoid, char **arg, int *optindex)
 
 		/* Match an opt. */
 		if (matchlongopt
-		    (pstart, &optname, &namelen, &optarg, &arglen)) {
+		    (pstart/*参数起始位置*/, &optname, &namelen, &optarg, &arglen)) {
 
 			/* it LOOKS like an opt, but is it one?! */
 			if (!find_opt
-			    (s, 1, optname, namelen, &errcode,
+			    (s, 1/*指明查长选项*/, optname, namelen, &errcode,
 			     &opt_offset)) {
+			    /*匹配失败，返回error code*/
 				scanopt_err (s, 0, errcode);
 				return errcode;
 			}
@@ -670,7 +694,7 @@ int     scanopt (scanopt_t *svoid, char **arg, int *optindex)
 
 		else {
 			/* It's not an option. We're done. */
-			return 0;
+			return 0;/*不是一个选项*/
 		}
 	}
 
@@ -687,7 +711,8 @@ int     scanopt (scanopt_t *svoid, char **arg, int *optindex)
 		is_short = 1;
 
 		if (!find_opt
-		    (s, 0, pstart, namelen, &errcode, &opt_offset)) {
+		    (s, 0/*短选项*/, pstart, namelen, &errcode, &opt_offset)) {
+		    /*匹配短选项失败*/
 			scanopt_err(s, 1, errcode);
 			return errcode;
 		}
@@ -710,8 +735,8 @@ int     scanopt (scanopt_t *svoid, char **arg, int *optindex)
 	 * that we can use as an argument (if needed). */
 	has_next = s->index + 1 < s->argc;
 
-	optp = s->options + opt_offset;
-	auxp = s->aux + opt_offset;
+	optp = s->options + opt_offset;/*命中的选项*/
+	auxp = s->aux + opt_offset;/*此选项对应的aux*/
 
 	/* case: no args allowed */
 	if (auxp->flags & ARG_NONE) {
@@ -736,7 +761,7 @@ int     scanopt (scanopt_t *svoid, char **arg, int *optindex)
 
 		if (!optarg) {
 			/* Let the next argv element become the argument. */
-			SAFE_ASSIGN (arg, s->argv[s->index + 1]);
+			SAFE_ASSIGN (arg, s->argv[s->index + 1]);/*设置参数值*/
 			INC_INDEX (s, 2);
 		}
 		else {

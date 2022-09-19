@@ -110,6 +110,7 @@ cpp-flex.h: cpp-flex.skl mkskel.sh flexint_shared.h tables_shared.h tables_share
 	$(SHELL) $(srcdir)/chkskel.sh $@.tmp
 	mv -f $@.tmp $@
 
+#由mkskel生成c99-flex.h.tmp，然后chkskel.sh针对tmp进行检查，检查通过，变更为c99-flex.h
 c99-flex.h: c99-flex.skl mkskel.sh
 	$(SHELL) $(srcdir)/mkskel.sh c99 $(srcdir) $(m4) $(VERSION) > $@.tmp
 	$(SHELL) $(srcdir)/chkskel.sh $@.tmp

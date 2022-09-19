@@ -22,12 +22,14 @@
 #  PURPOSE.
 
 if test ! $# = 1; then
+   #只接收一个参数
    echo 'Usage: chkskel.sh file' >&2
    exit 1
 fi
 file=$1
 lines=$(grep -c '^  "%%' "${file}")
 if [ ! "${lines}" -eq 6 ]; then
+    #检查lines后，确认不等于6，报错
     echo 'ERROR: skeleton does not have the right number of %% section lines'
     exit 2
 fi

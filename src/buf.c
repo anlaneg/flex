@@ -59,7 +59,9 @@ struct Buf *buf_prints (struct Buf *buf, const char *fmt, const char *s)
 	t = malloc(tsz);
 	if (!t)
 	    flexfatal (_("Allocation of buffer to print string failed"));
+	/*按fmt格式化s,产生t*/
 	snprintf (t, tsz, fmt, s);
+	/*将t添加进buf*/
 	buf = buf_strappend (buf, t);
 	free(t);
 	return buf;
@@ -68,10 +70,11 @@ struct Buf *buf_prints (struct Buf *buf, const char *fmt, const char *s)
 /* Appends n characters in str to buf. */
 struct Buf *buf_strnappend (struct Buf *buf, const char *str, int n)
 {
+    /*将str中前n+1个元素(包含了'\0')填充进buf*/
 	buf_append (buf, str, n + 1);
 
 	/* "undo" the '\0' character that buf_append() already copied. */
-	buf->nelts--;
+	buf->nelts--;/*回退'\0'*/
 
 	return buf;
 }
@@ -79,12 +82,14 @@ struct Buf *buf_strnappend (struct Buf *buf, const char *str, int n)
 /* Appends characters in str to buf. */
 struct Buf *buf_strappend (struct Buf *buf, const char *str)
 {
+    /*将字符串str填充进buf中*/
 	return buf_strnappend (buf, str, (int) strlen (str));
 }
 
 /* create buf with 0 elements, each of size elem_size. */
 void buf_init (struct Buf *buf, size_t elem_size)
 {
+    /*初始化buffer*/
 	buf->elts = NULL;
 	buf->nelts = 0;
 	buf->elt_size = elem_size;
@@ -129,9 +134,11 @@ struct Buf *buf_append (struct Buf *buf, const void *ptr, int n_elem)
 				buf->elt_size);
 
 		if (!buf->elts)
+		    /*elts为空，直接分配*/
 			buf->elts =
 				allocate_array ((int) n_alloc, buf->elt_size);
 		else
+		    /*elts不为空，则执行realloc*/
 			buf->elts =
 				reallocate_array (buf->elts, (int) n_alloc,
 						  buf->elt_size);
@@ -139,7 +146,8 @@ struct Buf *buf_append (struct Buf *buf, const void *ptr, int n_elem)
 		buf->nmax = n_alloc;
 	}
 
-	memcpy ((char *) buf->elts + (size_t) buf->nelts * buf->elt_size, ptr,
+	/*将ptr指向的内容填充进去，元素数增加*/
+	memcpy ((char *) buf->elts + (size_t) buf->nelts * buf->elt_size/*当前元素结尾*/, ptr,
 		(size_t) n_elem * buf->elt_size);
 	buf->nelts += n_elem;
 

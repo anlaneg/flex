@@ -22,13 +22,19 @@
 #  PURPOSE.
 
 if test ! $# = 4; then
+   #必须提供4个参数
    echo 'Usage: mkskel.sh lang srcdir m4 version' >&2
    exit 1
 fi
+#采用哪种语言
 lang=$1
+#源文件所在目录
 srcdir=$2
+#m4程序名称及路径
 m4=$3
+#
 VERSION=$4
+# 校验版本是否有效，必须为数字
 case $VERSION in
    *[!0-9.]*) echo 'Invalid version number' >&2; exit 1;;
 esac
@@ -36,6 +42,9 @@ IFS=.
 # we do want word splitting, so we won't put double quotes around it (see IFS above)
 # shellcheck disable=2086
 set -- $VERSION
+#将${lang}-flex.skl中所有"4_"替换为a4,将所有"m4preproc"替换为"m4_"
+#然后将替换好的内容传递给m4程序
+#m4完成宏替换后，再由sed,1）将所有%#行均删除（此为skl文件的注释行）2）将m4_,a4_g再换回来
 sed 's/4_/a4_/g
 s/m4preproc_/m4_/g
 ' "$srcdir/${lang}-flex.skl" |

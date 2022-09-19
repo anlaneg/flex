@@ -46,8 +46,10 @@ void flex_regcomp(regex_t *preg, const char *regex, int cflags)
 {
 	int err;
 
+	/*初始化此结构体为0*/
 	memset (preg, 0, sizeof (regex_t));
 
+	/*编译正则表达式*/
 	if ((err = regcomp (preg, regex, cflags)) != 0) {
 		const size_t errbuf_sz = 200;
 		char *errbuf;

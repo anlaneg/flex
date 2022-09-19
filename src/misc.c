@@ -73,11 +73,13 @@ void   *allocate_array (int size, size_t element_size)
 	new_array = reallocarray(NULL, (size_t) size, element_size);
 # else
 	/* Do manual overflow detection */
+	/*需要申请size个element,每个element大小为element_size，则内存大小为num_bytes*/
 	size_t num_bytes = (size_t) size * element_size;
-	new_array = (size && SIZE_MAX / (size_t) size < element_size) ? NULL :
+	new_array = (size && SIZE_MAX / (size_t) size < element_size) ? NULL /*所需内存过大时返回NULL*/:
 		malloc(num_bytes);
 # endif
 	if (!new_array)
+	    /*申请内存失败后，直接退出*/
 		flexfatal (_("memory allocation failed in allocate_array()"));
 #endif
 	return new_array;
@@ -128,10 +130,12 @@ int intcmp (const void *a, const void *b)
 void check_char (int c)
 {
 	if (c >= CSIZE)
+	    /*字符c超过CSIZE*/
 		lerr (_("bad character '%s' detected in check_char()"),
 			readable_form (c));
 
 	if (c >= ctrl.csize)
+	    /*c大于等于ctrl.csize*/
 		lerr (_
 			("scanner requires -8 flag to use the character %s"),
 			readable_form (c));
@@ -405,6 +409,7 @@ unsigned char myesc (unsigned char array[])
 {
 	unsigned char    c, esc_char;
 
+	/*返回转义后字符*/
 	switch (array[1]) {
 	case 'b':
 		return '\b';
@@ -431,18 +436,23 @@ unsigned char myesc (unsigned char array[])
 		{		/* \<octal> */
 			int     sptr = 1;
 
+			/*查找到数字结尾*/
 			while (sptr <= 3 &&
                                array[sptr] >= '0' && array[sptr] <= '7') {
 				++sptr;
 			}
 
+			/*取出非数字的字符*/
 			c = array[sptr];
-			array[sptr] = '\0';
+			array[sptr] = '\0';/*将已保存的字符置为'\0',断开字符串*/
 
+			/*将数字按8进制进行转换*/
 			esc_char = (unsigned char) strtoul (array + 1, NULL, 8);
 
+			/*还原刚才为转换而设置为'\0'的字符*/
 			array[sptr] = c;
 
+			/*返回转换后的数字*/
 			return esc_char;
 		}
 
@@ -465,10 +475,12 @@ unsigned char myesc (unsigned char array[])
 
 			array[sptr] = c;
 
+			/*转换16进制，并返回转换后的value*/
 			return esc_char;
 		}
 
 	default:
+	    /*返回其它非转义字符*/
 		return array[1];
 	}
 }
@@ -478,6 +490,7 @@ unsigned char myesc (unsigned char array[])
  *	 generated scanner, keeping track of the line count.
  */
 
+/*输出字符串到stdout*/
 void out (const char *str)
 {
 	fputs (str, stdout);
@@ -505,14 +518,17 @@ void out_str (const char *fmt, const char str[])
 
 void out_str_dec (const char *fmt, const char str[], int n)
 {
+    /*格式化fmt,输出到stdout*/
 	fprintf (stdout,fmt, str, n);
 }
 
+/*输出一个字符到stdout*/
 void outc (int c)
 {
 	fputc (c, stdout);
 }
 
+/*输出一行字符串至stdout*/
 void outn (const char *str)
 {
 	fputs (str,stdout);
@@ -525,6 +541,7 @@ void outn (const char *str)
  */
 void out_m4_define (const char* def, const char* val)
 {
+    /*通过m4定义宏def,其对应的内容为val*/
     const char * fmt = "m4_define( [[%s]], [[%s]])m4_dnl\n";
     fprintf(stdout, fmt, def, val?val:"");
 }
@@ -590,8 +607,9 @@ void   *reallocate_array (void *array, int size, size_t element_size)
 	new_array = reallocarray(array, (size_t) size, element_size);
 # else
 	/* Do manual overflow detection */
+	/*需要申请size个element,每个element大小为element_size，则内存大小为num_bytes*/
 	size_t num_bytes = (size_t) size * element_size;
-	new_array = (size && SIZE_MAX / (size_t) size < element_size) ? NULL :
+	new_array = (size && SIZE_MAX / (size_t) size < element_size) ? NULL /*所需内存过大时返回NULL*/:
 		realloc(array, num_bytes);
 # endif
 	if (!new_array)
@@ -669,15 +687,18 @@ char   *chomp (char *str)
 	return str;
 }
 
+/*输出注释行*/
 void comment(const char *txt)
 {
 	char buf[MAXLINE];
 	bool eol;
 
+	/*注释内容*/
 	strncpy(buf, txt, MAXLINE-1);
 	eol = buf[strlen(buf)-1] == '\n';
 
 	if (eol)
+	    /*移除最后的end of line标记*/
 		buf[strlen(buf)-1] = '\0';
 	out_str("M4_HOOK_COMMENT_OPEN [[%s]] M4_HOOK_COMMENT_CLOSE", buf);
 	if (eol)

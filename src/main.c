@@ -140,6 +140,7 @@ int flex_main (int argc, char *argv[])
 	 */
 	exit_status = setjmp (flex_main_jmp_buf);
 	if (exit_status){
+	    /*退出码非0时，刷stdout,并关闭stdout*/
 		if (stdout && !_stdout_closed && !ferror(stdout)){
 			fflush(stdout);
 			fclose(stdout);
@@ -282,6 +283,7 @@ int main (int argc, char *argv[])
 #endif
 #endif
 
+	/*main入口*/
 	return flex_main (argc, argv);
 }
 
@@ -721,14 +723,14 @@ void flexinit (int argc, char **argv)
 	sf_init ();
 
 	/* Enable C++ if program name ends with '+'. */
-	program_name = argv[0];
+	program_name = argv[0];/*记录程序名称*/
 
 	if (program_name != NULL &&
 	    program_name[strlen (program_name) - 1] == '+')
-		ctrl.C_plus_plus = true;
+		ctrl.C_plus_plus = true;/*标记c++程序*/
 
 	/* read flags */
-	sopt = scanopt_init (flexopts, argc, argv, 0);
+	sopt = scanopt_init (flexopts, argc, argv, 0);/*初始化flexopts*/
 	if (!sopt) {
 		/* This will only happen when flexopts array is altered. */
 		fprintf (stderr,
@@ -736,6 +738,7 @@ void flexinit (int argc, char **argv)
 		FLEX_EXIT (1);
 	}
 
+	/*解析参数，填充ctrl*/
 	while ((rv = scanopt (sopt, &arg, &optind)) != 0) {
 
 		if (rv < 0) {
@@ -744,11 +747,13 @@ void flexinit (int argc, char **argv)
 				 _
 				 ("Try `%s --help' for more information.\n"),
 				 program_name);
-			FLEX_EXIT (1);
+			FLEX_EXIT (1);/*遇错退*/
 		}
 
+		/*检查选项对应的标记*/
 		switch ((enum flexopt_flag_t) rv) {
 		    case OPT_CPLUSPLUS:
+		        /*生成c++*/
 			ctrl.C_plus_plus = true;
 			break;
 
@@ -829,6 +834,7 @@ void flexinit (int argc, char **argv)
 			break;
 
 		    case OPT_HELP:
+		        /*显示帮助信息*/
 			usage ();
 			FLEX_EXIT (0);
 
@@ -932,6 +938,7 @@ void flexinit (int argc, char **argv)
 			break;
 
 		    case OPT_VERSION:
+		        /*显示版本信息*/
 			printf ("%s %s\n", (ctrl.C_plus_plus ? "flex++" : "flex"), flex_version);
 			FLEX_EXIT (0);
 
@@ -1156,10 +1163,11 @@ void flexinit (int argc, char **argv)
 		}		/* switch */
 	}			/* while scanopt() */
 
-	scanopt_destroy (sopt);
+	scanopt_destroy (sopt);/*选项解析完毕，释放资源*/
 
-	num_input_files = argc - optind;
-	input_files = argv + optind;
+	num_input_files = argc - optind;/*有多少个输入文件*/
+	input_files = argv + optind;/*指向首个输入文件*/
+	/*设置首个输入文件*/
 	set_input_file (num_input_files > 0 ? input_files[0] : NULL);
 
 	lastccl = lastsc = lastdfa = lastnfa = 0;

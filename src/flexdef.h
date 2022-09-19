@@ -700,21 +700,26 @@ extern int num_backing_up, bol_needed;
 void   *allocate_array(int, size_t);
 void   *reallocate_array(void *, int, size_t);
 
+/*申请长度为size的int型数组*/
 #define allocate_integer_array(size) \
 	allocate_array(size, sizeof(int))
 
+/*扩大array数组的长度到size，其数组成员为int类型*/
 #define reallocate_integer_array(array,size) \
 	reallocate_array((void *) array, size, sizeof(int))
 
+/*申请长度为size的bool型数组*/
 #define allocate_bool_array(size) \
 	allocate_array(size, sizeof(bool))
 
 #define reallocate_bool_array(array,size) \
 	reallocate_array((void *) array, size, sizeof(bool))
 
+/*申请长度为size的int*型数组*/
 #define allocate_int_ptr_array(size) \
 	allocate_array(size, sizeof(int *))
 
+/*申请长度为size的char*型数组*/
 #define allocate_char_ptr_array(size) \
 	allocate_array(size, sizeof(char *))
 
@@ -1101,9 +1106,13 @@ extern int yylex(void);
 
 /* A growable array. See buf.c. */
 struct Buf {
+    /*元素数组指针*/
 	void   *elts;		/* elements. */
+	/*当前元素总数*/
 	int     nelts;		/* number of elements. */
+	/*每个元素的大小*/
 	size_t  elt_size;	/* in bytes. */
+	/*申请的元素总数*/
 	int     nmax;		/* max capacity of elements. */
 };
 

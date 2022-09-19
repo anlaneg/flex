@@ -39,13 +39,15 @@ ccl_contains (const int cclp, const int ch)
 {
 	int     ind, len, i;
 
-	len = ccllen[cclp];
-	ind = cclmap[cclp];
+	len = ccllen[cclp];/*cclp字符串长度*/
+	ind = cclmap[cclp];/*cclp起始索引*/
 
 	for (i = 0; i < len; ++i)
 		if (ccltbl[ind + i] == ch)
+		    /*ch在cclp对应的字符串中，取cclng[cclp]反情况*/
 			return !cclng[cclp];
 
+	/*0-len之间均不包含len,取cclng[cclp]*/
     return cclng[cclp];
 }
 
@@ -56,6 +58,7 @@ void ccladd (int cclp, int ch)
 {
 	int     ind, len, newpos, i;
 
+	/*检查ch是否合乎范围*/
 	check_char (ch);
 
 	len = ccllen[cclp];
@@ -287,6 +290,9 @@ bool range_covers_case (int c1, int c2)
 {
 	int     i, o;
 
+	/*遍历c1,c2间所有字符，如果字符有大小写，
+	 * 则反转其大小写，如果反转后其不在c1,c2范围内，
+	 * 则返回false,否则返回true*/
 	for (i = c1; i <= c2; i++) {
 		if (has_case (i)) {
 			o = reverse_case (i);
@@ -302,11 +308,13 @@ bool range_covers_case (int c1, int c2)
  */
 int reverse_case (int c)
 {
+    /*如果c有大小写之分，则进行对应转换，大写转小写，小写转大写*/
 	return isupper (c) ? tolower (c) : (islower (c) ? toupper (c) : c);
 }
 
 /** Return true if c is uppercase or lowercase. */
 bool has_case (int c)
 {
+    /*检查字符c是否有大小之分*/
 	return (isupper (c) || islower (c)) ? true : false;
 }
