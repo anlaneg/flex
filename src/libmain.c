@@ -30,6 +30,7 @@ int     main (int argc, char *argv[])
 	(void)argc;
 	(void)argv;
 
+	/*调用yylex函数，直到返回值为0*/
 	while (yylex () != 0) ;
 
 	exit(0);

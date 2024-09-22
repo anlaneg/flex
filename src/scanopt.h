@@ -62,6 +62,7 @@ extern  "C" {
 
 /* Specification for a single option. */
 	struct optspec_t {
+		/*选项格式*/
 		const char *opt_fmt;	/* e.g., "--foo=FILE", "-f FILE", "-n [NUM]" */
 		int     r_val;	/* Value to be returned by scanopt_ex(). */
 		const char *desc;	/* Brief description of this option, or NULL. */

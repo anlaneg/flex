@@ -40,7 +40,7 @@
 
 
 /* The command-line options, passed to scanopt_init() */
-optspec_t flexopts[] = {
+optspec_t flexopts[] = {/*flex支持的选项*/
 
 	{"-7", OPT_7BIT, 0}
 	,

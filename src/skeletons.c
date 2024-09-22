@@ -42,6 +42,7 @@ const char *cpp_skel[] = {
     0,
 };
 
+/*包含c99-flex.h生成的一组字符串*/
 const char *c99_skel[] = {
 #include "c99-flex.h"
     0,
@@ -65,7 +66,7 @@ struct flex_backend_t {
 
 static struct flex_backend_t backends[] = {
     {.skel=cpp_skel},
-    {.skel=c99_skel},
+    {.skel=c99_skel},/*c99对应的后端*/
     {.skel=go_skel},
     {NULL}
 };
@@ -95,7 +96,7 @@ static bool boneseeker(const char *bone)
 	return false;
 }
 
-void backend_by_name(const char *name)
+void backend_by_name(const char *name/*后端名称*/)
 {
 	const char *prefix_property;
 	if (name != NULL) {
@@ -109,14 +110,19 @@ void backend_by_name(const char *name)
 			ctrl.reentrant = true;
 			goto backend_ok;
 		}
+
+		/*查询指定名称的backend*/
 		for (backend = &backends[0]; backend->skel != NULL; backend++) {
 			if (strcasecmp(skel_property("M4_PROPERTY_BACKEND_NAME"), name) == 0)
 				goto backend_ok;
 		}
+
+		/*查找后端失败*/
 		flexerror(_("no such back end"));
 	}
   backend_ok:
 	ctrl.rewrite = !is_default_backend();
+	/*取skel中的backend_name属性*/
 	ctrl.backend_name = xstrdup(skel_property("M4_PROPERTY_BACKEND_NAME"));
 	ctrl.traceline_re = xstrdup(skel_property("M4_PROPERTY_TRACE_LINE_REGEXP"));
 	ctrl.traceline_template = xstrdup(skel_property("M4_PROPERTY_TRACE_LINE_TEMPLATE"));
@@ -147,7 +153,7 @@ const char *suffix (void)
  * definition must be single-line.  Don't call this a second time before
  * stashing away the previous return, we cheat with static buffers.
  */
-const char *skel_property(const char *propname)
+const char *skel_property(const char *propname/*属性名称*/)
 {
 	int i;
 	static char name[256], value[256], *np, *vp;;
@@ -156,12 +162,15 @@ const char *skel_property(const char *propname)
 	for (i = 0; backend->skel[i] != NULL; i++) {
 		const char *line = backend->skel[i];
 		if (line[0] == '\0')
+		    /*忽略空行*/
 			continue;
 		/* only scan before first skell breakpoint */
 		if (strncmp(line, "%%", 2) == 0)
+		    /*遇到首个%%,跳出*/
 			break;
 		/* ignore anything that's not a definition */
 		if (strncmp(line, "m4_define(", 10) != 0)
+		    /*仅在m4_define中进行查找*/
 			continue;
 		/* skip space and quotes before macro name */
 		for (cp = line + 10; isspace(*cp) || *cp == '['; *cp++)
@@ -175,6 +184,7 @@ const char *skel_property(const char *propname)
 		/* check for valid and matching name */
 		if (*cp == ']') {
 			if (strcmp(name, propname) != 0)
+			    /*属性名称不匹配，尝试下一行*/
 				continue; /* try next line */
 		} else {
 			flexerror(_("unterminated or too long property name"));
@@ -188,7 +198,7 @@ const char *skel_property(const char *propname)
 		if (*cp == '\0')
 			flexerror(_("garbled property line"));
 		/* extract the value */
-		vp = value;
+		vp = value;/*取得属性value*/
 		while (*cp != '\0' && vp < value + sizeof(value) - 1 && (cp[0] != ']' || cp[1] != ']'))
 			*vp++ = *cp++;
 		if (*cp == ']') {

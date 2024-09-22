@@ -36,6 +36,7 @@
 /* Append "new_text" to the running buffer. */
 void add_action (const char *new_text)
 {
+    /*字符串长度*/
 	int     len = (int) strlen (new_text);
 
 	while (len + action_index >= action_size - 10 /* slop */ ) {
@@ -48,13 +49,16 @@ void add_action (const char *new_text)
 		else
 			action_size = action_size * 2;
 
+		/*扩大action array*/
 		action_array =
 			reallocate_character_array (action_array,
 						    action_size);
 	}
 
+	/*将new_text输出到action数组*/
 	strcpy (&action_array[action_index], new_text);
 
+	/*action数组待填充起始地址*/
 	action_index += len;
 }
 
@@ -90,6 +94,7 @@ void   *allocate_array (int size, size_t element_size)
 
 int all_lower (char *str)
 {
+    /*检查str是否全为小写字每（如果非小写或者不是ascii，则返回0）*/
 	while (*str) {
 		if (!isascii ((unsigned char) * str) || !islower ((unsigned char) * str))
 			return 0;
@@ -104,6 +109,7 @@ int all_lower (char *str)
 
 int all_upper (char *str)
 {
+    /*检查str是否全为大写字每（如果非大写或者不是ascii，则返回0）*/
 	while (*str) {
 		if (!isascii ((unsigned char) * str) || !isupper ((unsigned char) * str))
 			return 0;
@@ -118,6 +124,7 @@ int all_upper (char *str)
 
 int intcmp (const void *a, const void *b)
 {
+    /*a,b是两个int*指针，比对两者指向的int值是否相等*/
   return *(const int *) a - *(const int *) b;
 }
 
@@ -147,6 +154,7 @@ void check_char (int c)
 
 unsigned char clower (int c)
 {
+    /*如果c为大写字每，则将其转换为小写*/
 	return (unsigned char) ((isascii (c) && isupper (c)) ? tolower (c) : c);
 }
 
@@ -155,6 +163,7 @@ char *xstrdup(const char *s)
 {
 	char *s2;
 
+	/*制做s的副本，并返回*/
 	if ((s2 = strdup(s)) == NULL)
 		flexfatal (_("memory allocation failure in xstrdup()"));
 
@@ -274,6 +283,7 @@ void line_directive_out (FILE *output_file, char *path, int linenum)
 	char   *s1, *s2, *s3;
 
 	if (!ctrl.gen_line_dirs)
+		/*如果不输出行指令，则直接退出*/
 		return;
 
 	s1 = (path != NULL) ? path : "M4_YY_OUTFILE_NAME";
@@ -695,11 +705,12 @@ void comment(const char *txt)
 
 	/*注释内容*/
 	strncpy(buf, txt, MAXLINE-1);
-	eol = buf[strlen(buf)-1] == '\n';
+	eol = buf[strlen(buf)-1] == '\n';/*检查行后是否为'\n'*/
 
 	if (eol)
 	    /*移除最后的end of line标记*/
 		buf[strlen(buf)-1] = '\0';
+	/*采用comment_open,comment_close包裹注释内容*/
 	out_str("M4_HOOK_COMMENT_OPEN [[%s]] M4_HOOK_COMMENT_CLOSE", buf);
 	if (eol)
 		outc ('\n');

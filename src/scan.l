@@ -124,13 +124,19 @@ extern const char *escaped_qstart, *escaped_qend;
 %x SECT3_NOESCAPE
 %x CHARACTER_CONSTANT
 
+/*定义空字符*/
 WS		[[:blank:]]+
+/*定义可选的空字符*/
 OPTWS		[[:blank:]]*
+/*定义非空字符*/
 NOT_WS		[^[:blank:]\r\n]
 
+/*定义new line*/
 NL		\r?\n
 
+/*name以字每或下划线开头，其后可以跟字每数字下划线，中划线*/
 NAME		([[:alpha:]_][[:alnum:]_-]*)
+/*非name字符*/
 NOT_NAME	[^[:alpha:]_*\n]+
 
 SCNAME		{NAME}
@@ -171,12 +177,15 @@ void context_member(char *, const char *);
 	^"%x"{NAME}?	return XSCDECL;
 	^"%{".*{NL}	START_CODEBLOCK(false);
     ^"%top"[[:blank:]]*"{"[[:blank:]]*{NL}    {
+    /*遇到%top\s+{\s+ 指令*/
 		char trampoline[512];
                 brace_start_line = linenum;
+                /*增加行数*/
                 ++linenum;
 		snprintf(trampoline, sizeof(trampoline),
 			 "M4_HOOK_TRACE_LINE_FORMAT(%d, [[%s]])",
 			 linenum, infilename?infilename:"<stdin>");
+			 /*将行号填充到top_buf中*/
                 buf_strappend(&top_buf, trampoline);
                 brace_depth = 1;
                 yy_push_state(CODEBLOCK_MATCH_BRACE);
@@ -1064,11 +1073,13 @@ int yywrap(void)
 	{
 	if ( --num_input_files > 0 )
 		{
+		/*仍存在输入文件，设置新的输入文件，返回0*/
 		set_input_file( *++input_files );
 		return 0;
 		}
 
 	else
+	   /*不存在新的输入文件，处理完成，返回1*/
 		return 1;
 	}
 

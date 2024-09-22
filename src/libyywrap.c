@@ -25,5 +25,6 @@ int     yywrap (void);
 
 int     yywrap (void)
 {
+    /*不存在新的输入文件，返回1表示已处理完成*/
 	return 1;
 }

@@ -50,12 +50,15 @@ struct _aux {
 
 
 struct _scanopt_t {
+	/*支持的所有选项*/
 	const optspec_t *options;	/* List of options. */
-	/*每个选项对应一个_aux结构*/
+	/*每一个选项对应一个_aux结构*/
 	struct _aux *aux;	/* Auxiliary data about options. */
 	/*指明参数options的数目*/
 	int     optc;		/* Number of options. */
+	/*argv的数目*/
 	int     argc;		/* Number of args. */
+	/*传入的参数*/
 	char  **argv;		/* Array of strings. */
 	/*当前分析位置*/
 	int     index;		/* Used as: argv[index][subscript]. */
@@ -137,7 +140,7 @@ static int get_cols (void)
        (s)->subscript= 0;  \
     }while(0)
 
-scanopt_t *scanopt_init (const optspec_t *options, int argc, char **argv, int flags)
+scanopt_t *scanopt_init (const optspec_t *options/*选项指针*/, int argc, char **argv, int flags)
 {
 	int     i;
 	struct _scanopt_t *s;
@@ -631,7 +634,7 @@ static int find_opt (struct _scanopt_t *s, int lookup_long, char *optstart, int
 
 
 /*实现参数解析*/
-int     scanopt (scanopt_t *svoid, char **arg, int *optindex)
+int     scanopt (scanopt_t *svoid/*支持的选项*/, char **arg, int *optindex)
 {
 	char   *optname = NULL, *optarg = NULL, *pstart;
 	int     namelen = 0, arglen = 0;

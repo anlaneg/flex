@@ -7,6 +7,7 @@ m4 = @M4@
 
 bin_PROGRAMS = flex
 if ENABLE_BOOTSTRAP
+#如开启bootstrap,则增加noinst_PROGRAMS
 noinst_PROGRAMS = stage1flex
 endif
 
@@ -19,6 +20,7 @@ libfl_la_SOURCES = \
 	libyywrap.c
 libfl_la_LDFLAGS = -version-info @SHARED_VERSION_INFO@
 
+#stage1flex依赖的源文件
 stage1flex_SOURCES = \
 	scan.l \
 	$(COMMON_SOURCES)
@@ -42,6 +44,7 @@ stage1flex_LINK = $(LINK)
 stage1flex_CFLAGS = $(AM_CFLAGS)
 endif
 
+#flex构建依赖的源文件
 flex_SOURCES = \
 	$(COMMON_SOURCES)
 
@@ -97,6 +100,7 @@ EXTRA_DIST = \
 
 CLEANFILES = stage1scan.c stage1flex$(EXEEXT)
 
+#通过脚本生成的头文件
 BUILT_SOURCES = \
 	cpp-flex.h \
 	c99-flex.h \
@@ -110,7 +114,8 @@ cpp-flex.h: cpp-flex.skl mkskel.sh flexint_shared.h tables_shared.h tables_share
 	$(SHELL) $(srcdir)/chkskel.sh $@.tmp
 	mv -f $@.tmp $@
 
-#由mkskel生成c99-flex.h.tmp，然后chkskel.sh针对tmp进行检查，检查通过，变更为c99-flex.h
+#由mkskel生成c99-flex.h.tmp，然后chkskel.sh针对tmp进行检查，
+#检查通过，变更为c99-flex.h
 c99-flex.h: c99-flex.skl mkskel.sh
 	$(SHELL) $(srcdir)/mkskel.sh c99 $(srcdir) $(m4) $(VERSION) > $@.tmp
 	$(SHELL) $(srcdir)/chkskel.sh $@.tmp
@@ -122,6 +127,7 @@ go-flex.h: go-flex.skl mkskel.sh
 	mv -f $@.tmp $@
 
 if ENABLE_BOOTSTRAP
+#通过stage1flex来生成.c文件
 stage1scan.c: scan.l stage1flex$(EXEEXT)
 	./stage1flex$(EXEEXT) $(AM_LFLAGS) $(LFLAGS) -o $@ $(srcdir)/scan.l
 else
@@ -138,6 +144,7 @@ dist-hook: scan.l flex$(EXEEXT)
 # make needs to be told to make inclusions so that parallelized runs will
 # not fail.
 
+#所有.skl文件均变更成.h文件名
 SKELINCLUDES := $(subst skl,h,$(wildcard *.skl))
 
 stage1flex-main.$(OBJEXT): parse.h $(SKELINCLUDES)

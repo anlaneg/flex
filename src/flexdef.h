@@ -329,6 +329,7 @@ struct ctrl_bundle_t {
 	bool no_yyinput;	// suppress use of yyinput()
 	bool no_unistd;		// suppress inclusion of unistd.h
 	bool posix_compat;	// (-X) maximize compatibility with POSIX lex 
+	/*指明前缀，默认为yy*/
 	char *prefix;		// prefix for externally visible names, default "yy" 
 	trit reject_really_used;// Force generation of support code for reject operation
 	bool reentrant;		// if true (-R), generate a reentrant C scanner
@@ -384,6 +385,7 @@ struct ctrl_bundle_t {
 	bool no_get_debug;
 	bool no_set_debug;
 	// Properties read from the skeleton
+	/*后端名称*/
 	const char *backend_name;	// What the back end tells you its name is
 	const char *traceline_re;	// Regular expression for recognizing tracelines */
 	const char *traceline_template;	// templare for emitting trace lines */

@@ -49,13 +49,13 @@ void set_up_initial_allocations(void);
 /* these globals are all defined and commented in flexdef.h */
 int     syntaxerror, eofseen;
 int     yymore_used, reject, real_reject, continued_action, in_rule;
-int     datapos, dataline, linenum;
+int     datapos, dataline, linenum/*由函数set_input_file初始化，指明行号*/;
 FILE   *skelfile = NULL;
 int     skel_ind = 0;
 char   *action_array;
 int     action_size, defs1_offset, prolog_offset, action_offset,
 	action_index;
-char   *infilename = NULL;
+char   *infilename = NULL;/*由函数set_input_file初始化，指明输入文件名称*/
 char   *extra_type = NULL;
 int     onestate[ONE_STACK_SIZE], onesym[ONE_STACK_SIZE];
 int     onenext[ONE_STACK_SIZE], onedef[ONE_STACK_SIZE], onesp;
@@ -89,8 +89,8 @@ int     sectnum, nummt, hshcol, dfaeql, numeps, eps2, num_reallocs, nmval;
 int     tmpuses, totnst, peakpairs, numuniq, numdup, hshsave;
 int     num_backing_up, bol_needed;
 int     end_of_buffer_state;
-char  **input_files;
-int     num_input_files;
+char  **input_files;/*输入的解析文件数组*/
+int     num_input_files;/*有多少个输入文件*/
 jmp_buf flex_main_jmp_buf;
 bool   *rule_has_nl, *ccl_has_nl;
 int     nlch = '\n';
@@ -138,14 +138,15 @@ int flex_main (int argc, char *argv[])
 	 * specify a value of 0 to longjmp. FLEX_EXIT(n) should be used instead of
 	 * exit(n);
 	 */
-	exit_status = setjmp (flex_main_jmp_buf);
+	exit_status = setjmp (flex_main_jmp_buf);/*保存长跳目标点*/
 	if (exit_status){
-	    /*退出码非0时，刷stdout,并关闭stdout*/
+	    /*由其它位置跳回（用于跳出），刷stdout,并关闭stdout*/
 		if (stdout && !_stdout_closed && !ferror(stdout)){
 			fflush(stdout);
 			fclose(stdout);
 		}
 		while (wait(&child_status) > 0){
+			/*wait返回>0，为进程pid,此进程退出*/
 			if (!WIFEXITED (child_status)
 			    || WEXITSTATUS (child_status) != 0){
 				/* report an error of a child
@@ -155,7 +156,7 @@ int flex_main (int argc, char *argv[])
 
 			}
 		}
-		return exit_status - 1;
+		return exit_status - 1;/*确定退出码*/
 	}
 
 	flexinit (argc, argv);
@@ -283,7 +284,7 @@ int main (int argc, char *argv[])
 #endif
 #endif
 
-	/*main入口*/
+	/*flex 程序入口*/
 	return flex_main (argc, argv);
 }
 
@@ -689,7 +690,7 @@ void flexinit (int argc, char **argv)
 	char   *arg;
 	scanopt_t sopt;
 
-	memset(&ctrl, '\0', sizeof(ctrl));
+	memset(&ctrl, '\0', sizeof(ctrl));/*ctrl变量清零*/
 	syntaxerror = false;
 	yymore_used = continued_action = false;
 	in_rule = reject = false;
@@ -727,7 +728,7 @@ void flexinit (int argc, char **argv)
 
 	if (program_name != NULL &&
 	    program_name[strlen (program_name) - 1] == '+')
-		ctrl.C_plus_plus = true;/*标记c++程序*/
+		ctrl.C_plus_plus = true;/*程序名中最后以'+'结尾，标记c++程序*/
 
 	/* read flags */
 	sopt = scanopt_init (flexopts, argc, argv, 0);/*初始化flexopts*/
@@ -747,7 +748,7 @@ void flexinit (int argc, char **argv)
 				 _
 				 ("Try `%s --help' for more information.\n"),
 				 program_name);
-			FLEX_EXIT (1);/*遇错退*/
+			FLEX_EXIT (1);/*解析遇错退出*/
 		}
 
 		/*检查选项对应的标记*/
@@ -816,11 +817,11 @@ void flexinit (int argc, char **argv)
 			break;
 
 		    case OPT_DEBUG:
-			ctrl.ddebug = true;
+			ctrl.ddebug = true;/*开启debug*/
 			break;
 
 		    case OPT_NO_DEBUG:
-			ctrl.ddebug = false;
+			ctrl.ddebug = false;/*关闭debug*/
 			break;
 
 		    case OPT_FULL:
@@ -839,7 +840,7 @@ void flexinit (int argc, char **argv)
 			FLEX_EXIT (0);
 
 		    case OPT_INTERACTIVE:
-			ctrl.interactive = true;
+			ctrl.interactive = true;/*指明采用交互式*/
 			break;
 
 		    case OPT_CASE_INSENSITIVE:
@@ -877,7 +878,7 @@ void flexinit (int argc, char **argv)
 			break;
 
 		    case OPT_PREFIX:
-			ctrl.prefix = arg;
+			ctrl.prefix = arg;/*指明前缀*/
 			break;
 
 		    case OPT_PERF_REPORT:
@@ -1197,7 +1198,7 @@ void readin (void)
 {
 	char buf[256];
 
-	line_directive_out(NULL, infilename, linenum);
+	line_directive_out(NULL, infilename/*输入文件*/, linenum/*行号*/);
 
 	if (yyparse ()) {
 		pinpoint_message (_("fatal parse error"));
@@ -1213,11 +1214,11 @@ void readin (void)
 	 * when %option emit was evaluated; this catches command-line
 	 * optiins and the default case.
 	 */
-	backend_by_name(ctrl.emit);
+	backend_by_name(ctrl.emit);/*通过目标语言找到backend*/
 
 	initialize_output_filters();
 
-	yyout = stdout;
+	yyout = stdout;/*指明输出到stdout*/
 
 	if (tablesext)
 		gentables = false;
@@ -1425,7 +1426,8 @@ void readin (void)
 	{
 		struct Buf tmpbuf;
 		int i;
-		buf_init(&tmpbuf, sizeof(char));
+		buf_init(&tmpbuf, sizeof(char));/*指定每个元素为char*/
+		/*生成一组M4_HOOK_CONST_DEFINE_STATE宏*/
 		for (i = 1; i <= lastsc; i++) {
 			char *str, *fmt = "M4_HOOK_CONST_DEFINE_STATE(%s, %d)";
 			size_t strsz;
@@ -1434,12 +1436,12 @@ void readin (void)
 			str = malloc(strsz);
 			if (!str)
 				flexfatal(_("allocation of macro definition failed"));
-			snprintf(str, strsz, fmt, scname[i], i - 1);
-			buf_strappend(&tmpbuf, str);
+			snprintf(str, strsz, fmt, scname[i], i - 1);/*格式化section-name及index到str*/
+			buf_strappend(&tmpbuf, str);/*填充进tmpbuf*/
 			free(str);
 		}
 		// FIXME: Not dumped visibly because we plan to do away with the indirection
-		out_m4_define("M4_YY_SC_DEFS", tmpbuf.elts);
+		out_m4_define("M4_YY_SC_DEFS", tmpbuf.elts);/*定义M4_YY_SC_DEFS宏的内容*/
 		buf_destroy(&tmpbuf);
 	}
 
@@ -1684,9 +1686,10 @@ void readin (void)
 
 void set_up_initial_allocations (void)
 {
+	/*最大的列数*/
 	maximum_mns = (ctrl.long_align ? MAXIMUM_MNS_LONG : MAXIMUM_MNS);
 	current_mns = INITIAL_MNS;
-	firstst = allocate_integer_array (current_mns);
+	firstst = allocate_integer_array (current_mns);/*申请长度为current_mnt长度的int数组*/
 	lastst = allocate_integer_array (current_mns);
 	finalst = allocate_integer_array (current_mns);
 	transchar = allocate_integer_array (current_mns);

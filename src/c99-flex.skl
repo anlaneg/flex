@@ -20,11 +20,16 @@
 %#
 
 %#  Macros for preproc stage.
+%# 预处理阶段，禁用注释符
 m4preproc_changecom
+%# 注意：预处理阶段没有更改左引用符及右引用符
 
 %# Macros for runtime processing stage.
+%# 运行时阶段，禁用注释符
 m4_changecom
+%# 运行时阶段，恢复到原始的引用符号
 m4_changequote
+%# 运行时阶段，设置左引用符及右引用符
 m4_changequote([[, ]])
 
 %# Properties not used in the skeleton - meant to be read by the Flex code
@@ -128,8 +133,11 @@ const int YY_FLEX_SUBMINOR_VERSION = FLEX_SUBMINOR_VERSION;
 %# In languages like Go with a coincept of package names the prefix option
 %# should be used for setting that.
 
+%# 如果M4_MODE_PREFIX没有被定,则定义M4_MODE_PREFIX为yy
 m4_ifdef( [[M4_MODE_PREFIX]],, [[m4_define([[M4_MODE_PREFIX]], [[yy]])]])
 
+%# 预处理阶段：定义M4_GEN_PREFIX，并使后续内容被替换
+%# 此定义为,如果yy$1未定义，则定义already_define宏，否则定义yy$1
 m4preproc_define(`M4_GEN_PREFIX',``
 [[#ifdef yy$1
 #define ]]M4_MODE_PREFIX[[$1_ALREADY_DEFINED
